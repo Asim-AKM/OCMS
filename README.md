@@ -45,7 +45,6 @@ The application follows a layered architecture with clear separation of concerns
 ### Design Principles
 
 * Repository Pattern
-* Dependency Injection
 * Separation of Concerns (SoC)
 * Entity Framework Core ORM
 * Role-Based Access Control (RBAC)

@@ -1,0 +1,190 @@
+﻿@using OCMS.Common.CommonClasses.Enums
+@{
+    ViewBag.Title = "Track Complaint";
+    Layout = "~/Areas/Users/Views/_Layout.cshtml";
+}
+
+<section class="track-complaint-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="track-card">
+                    <div class="track-header">
+                        <h2><i class="fas fa-search me-2"></i> Track Your Complaint</h2>
+                        <p>Enter your complaint ID to check the current status</p>
+                    </div>
+
+                    <form id="trackForm" novalidate>
+                        <div class="form-group">
+                            <label for="complaintId">Complaint ID</label>
+                            <div class="input-group">
+                                <span class="input-group-text">C-</span>
+                                <input type="text" id="trackId" name="TrackId" class="form-control"
+                                       placeholder="Enter your complaint tracking ID" required>
+                                <button class="btn btn-primary" type="submit" id="trackBtn">
+                                    <i class="fas fa-search me-1"></i> Track
+                                </button>
+                            </div>
+                            <div class="invalid-feedback d-block" id="trackIdError"></div>
+                        </div>
+                    </form>
+
+                    <div id="complaintStatus" style="display: none;" class="mt-4">
+                        <div class="status-header">
+                            <h4>Complaint Details</h4>
+                            <span id="statusBadge" class="badge"></span>
+                        </div>
+
+                        <div class="status-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Complaint ID:</span>
+                                <span class="detail-value" id="detailTrackId"></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Title:</span>
+                                <span class="detail-value" id="detailTitle"></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Category:</span>
+                                <span class="detail-value" id="detailCategory"></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Description:</span>
+                                <span class="detail-value" id="detailDescription"></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Date Submitted:</span>
+                                <span class="detail-value" id="detailDate"></span>
+                            </div>
+                        </div>
+
+                        <div class="status-timeline mt-4">
+                            <h5>Status Timeline</h5>
+                            <div class="timeline-steps" id="timelineSteps"></div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-danger mt-4 d-none" id="complaintNotFound">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Complaint not found. Please check your Complaint ID and try again.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section scripts{
+    <script src="~/Asset/UserAsset/js/jquery.min.js"></script>
+    <script>
+
+        var trackBtn = $('#trackBtn');
+        var originalBtnHtml = trackBtn.html();
+
+        function setBtnLoading() {
+            trackBtn.html('<i class="fas fa-spinner fa-spin me-1"></i> Tracking...').prop('disabled', true);
+        }
+
+        function resetBtn() {
+            trackBtn.html(originalBtnHtml).prop('disabled', false);
+        }
+
+        var statusConfig = {
+            0: { label: 'Approved',    badge: 'bg-info'    },
+            1: { label: 'Pending',     badge: 'bg-warning' },
+            2: { label: 'In Progress', badge: 'bg-primary' },
+            3: { label: 'Resolved',    badge: 'bg-success' },
+            4: { label: 'Rejected',    badge: 'bg-danger'  }
+        };
+
+        var timelineStages = [
+            { label: 'Submitted',   statuses: [0, 1, 2, 3, 4] },
+            { label: 'Approved',    statuses: [0, 2, 3]        },
+            { label: 'In Progress', statuses: [2, 3]           },
+            { label: 'Resolved',    statuses: [3]              }
+        ];
+
+        function buildTimeline(currentStatus) {
+            var html = '';
+
+            timelineStages.forEach(function (stage) {
+                var isCompleted = stage.statuses.indexOf(currentStatus) !== -1;
+                var stepClass = isCompleted ? 'timeline-step active completed' : 'timeline-step';
+                var icon = isCompleted ? 'fa-check' : 'fa-clock';
+
+                html += '<div class="' + stepClass + '">' +
+                            '<div class="timeline-icon"><i class="fas ' + icon + '"></i></div>' +
+                            '<div class="timeline-content">' +
+                                '<h6>' + stage.label + '</h6>' +
+                                '<p>' + (isCompleted ? 'Completed' : 'Pending') + '</p>' +
+                            '</div>' +
+                        '</div>';
+            });
+
+            $('#timelineSteps').html(html);
+        }
+
+        function renderComplaint(data) {
+            var config = statusConfig[data.Status] || { label: 'Unknown', badge: 'bg-secondary' };
+
+            $('#statusBadge').text(config.label).removeClass().addClass('badge ' + config.badge);
+            $('#detailTrackId').text('C-' + data.TrackId);
+            $('#detailTitle').text(data.Title);
+            $('#detailCategory').text(data.Category);
+            $('#detailDescription').text(data.Description);
+            $('#detailDate').text(data.SubmissionDate
+                ? new Date(parseInt(data.SubmissionDate.replace('/Date(', '').replace(')/', ''))).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                : 'N/A'
+            );
+
+            buildTimeline(data.Status);
+
+            $('#complaintNotFound').addClass('d-none');
+            $('#complaintStatus').show();
+        }
+
+        $('#trackForm').on('submit', function (e) {
+            e.preventDefault();
+
+            var trackId = $('#trackId').val().trim();
+            $('#trackIdError').text('');
+            $('#trackId').removeClass('is-invalid');
+
+            if (!trackId) {
+                $('#trackId').addClass('is-invalid');
+                $('#trackIdError').text('Please enter your complaint tracking ID');
+                return;
+            }
+
+            setBtnLoading();
+            $('#complaintStatus').hide();
+            $('#complaintNotFound').addClass('d-none');
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("TrackComplaint", "Complaint", new { area = "Visitors" })',
+                data: { TrackId: trackId },
+                success: function (response) {
+                    resetBtn();
+
+                    if (!response.Found) {
+                        $('#complaintNotFound').removeClass('d-none');
+                        return;
+                    }
+
+                    renderComplaint(response.Data);
+                },
+                error: function () {
+                    resetBtn();
+                    showToast("Something went wrong. Please try again later.", "error");
+                }
+            });
+        });
+
+        $('#trackId').on('input', function () {
+            $(this).removeClass('is-invalid');
+            $('#trackIdError').text('');
+        });
+
+    </script>
+}

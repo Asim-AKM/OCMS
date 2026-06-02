@@ -1,0 +1,76 @@
+﻿@using OCMS.Areas.Users.DTO_s.UsersDto_s
+@using OCMS.Common.CommonClasses.Enums
+@model IEnumerable<GetAllUserDTO>
+
+<table id="usersTable" class="table table-bordered dt-responsive nowrap"
+       style="border-collapse:collapse; border-spacing:0; width:100%;">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Image</th>
+            <th>Joined</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.FullName</td>
+                <td>@item.Email</td>
+                <td>
+                    <select class="form-control form-control-sm"
+                            onchange="UpdateUserRole('@item.UserId', this.value)">
+                        <option value="@((int)UserRoles.User)"
+                                @(item.Role == UserRoles.User ? "selected" : "")>
+                            User
+                        </option>
+                        <option value="@((int)UserRoles.Admin)"
+                                @(item.Role == UserRoles.Admin ? "selected" : "")>
+                            Admin
+                        </option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control form-control-sm"
+                            onchange="UpdateUserStatus('@item.UserId', this.value)">
+                        <option value="@((int)UserStatus.Approved)"
+                                @(item.Status == UserStatus.Approved ? "selected" : "")>
+                            Approved
+                        </option>
+                        <option value="@((int)UserStatus.Pending)"
+                                @(item.Status == UserStatus.Pending ? "selected" : "")>
+                            Pending
+                        </option>
+                        <option value="@((int)UserStatus.Rejected)"
+                                @(item.Status == UserStatus.Rejected ? "selected" : "")>
+                            Rejected
+                        </option>
+                        <option value="@((int)UserStatus.Warning)"
+                                @(item.Status == UserStatus.Warning ? "selected" : "")>
+                            Warning
+                        </option>
+                        <option value="@((int)UserStatus.Suspended)"
+                                @(item.Status == UserStatus.Suspended ? "selected" : "")>
+                            Suspended
+                        </option>
+                    </select>
+                </td>
+                <td>
+                    <img src="@item.ImageLink" height="40" width="40"
+                         style="border-radius:50%; object-fit:cover;"
+                         onerror="this.src='/Asset/AdminAsset/images/users/user-4.jpg'" />
+                </td>
+                <td>@(item.CreadDate.HasValue ? item.CreadDate.Value.ToString("dd MMM yyyy") : "N/A")</td>
+                <td>
+                    <button onclick="Delete('@item.UserId')" class="btn btn-danger btn-sm waves-effect">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

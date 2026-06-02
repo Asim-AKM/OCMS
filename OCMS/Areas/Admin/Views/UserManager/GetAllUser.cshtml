@@ -1,0 +1,404 @@
+﻿@using OCMS.Areas.Users.DTO_s.UsersDto_s
+@using OCMS.Common.CommonClasses.Enums
+@using OCMS.Common.CommonClasses
+
+@model IEnumerable<GetAllUserDTO>
+@{
+    ViewBag.Title = "GetAllUser";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-page">
+    <div class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="page-title-box">
+                        <h4 id="TableName" class="page-title">Users Table</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-content-wrapper">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card m-b-20">
+                            <div class="card-body">
+
+                                <div class="d-flex justify-content-end mb-3">
+                                    <button type="button"
+                                            class="btn btn-success waves-effect waves-light mr-2"
+                                            onclick="openAddUserModal()">
+                                        <i class="fa fa-user-plus mr-1"></i> Add User
+                                    </button>
+                                    <div class="btn-group">
+                                        <span class="btn btn-primary disabled"
+                                              style="pointer-events:none; border-top-right-radius:0; border-bottom-right-radius:0;">
+                                            Filter
+                                        </span>
+                                        <button id="filterButton" type="button"
+                                                class="btn btn-primary dropdown-toggle"
+                                                data-toggle="dropdown"
+                                                style="border-top-left-radius:0; border-bottom-left-radius:0;">
+                                            All Users
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item" href="javascript:void(0)"
+                                               onclick="setFilter('Approved Users', '@((int)UserStatusType.Approved)')">Approved</a>
+                                            <a class="dropdown-item" href="javascript:void(0)"
+                                               onclick="setFilter('Pending Users', '@((int)UserStatusType.Pending)')">Pending</a>
+                                            <a class="dropdown-item" href="javascript:void(0)"
+                                               onclick="setFilter('Rejected Users', '@((int)UserStatusType.Rejected)')">Rejected</a>
+                                            <a class="dropdown-item" href="javascript:void(0)"
+                                               onclick="setFilter('Warning Users', '@((int)UserStatusType.Warning)')">Warning</a>
+                                            <a class="dropdown-item" href="javascript:void(0)"
+                                               onclick="setFilter('Suspended Users', '@((int)UserStatusType.Suspended)')">Suspended</a>
+                                            <a class="dropdown-item" href="javascript:void(0)"
+                                               onclick="setFilter('All Users', '@((int)UserStatusType.AllUsers)')">All</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="TableContainer"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#1b82ec;">
+                <h5 class="modal-title text-white">
+                    <i class="fa fa-user-plus mr-2"></i> Add New User
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm" enctype="multipart/form-data" novalidate>
+
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="au_fullName" name="FullName"
+                               class="form-control" placeholder="Enter full name" required>
+                        <div class="invalid-feedback">Full name is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="au_email" name="Email"
+                               class="form-control" placeholder="Enter email" required>
+                        <div class="invalid-feedback">Valid email is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="au_password" name="Password"
+                               class="form-control" placeholder="Enter password" required>
+                        <div class="invalid-feedback">Password is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Assign Role</label>
+                        <select id="au_role" name="Role" class="form-control" required>
+                            <option value="" disabled selected>Select role</option>
+                            <option value="@((int)UserRoles.User)">User</option>
+                            <option value="@((int)UserRoles.Admin)">Admin</option>
+                        </select>
+                        <div class="invalid-feedback">Role is required</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Profile Image <small class="text-muted">(Optional)</small></label>
+                        <input type="file" id="au_image" name="ImageFile"
+                               class="form-control-file" accept="image/*">
+                    </div>
+
+                    <div id="adminPasswordWrapper">
+                        <hr>
+                        <p class="text-muted mb-2" style="font-size:13px;">
+                            <i class="fa fa-lock mr-1"></i>
+                            Confirm your admin password to proceed
+                        </p>
+                        <div class="form-group mb-0">
+                            <label>Your Admin Password</label>
+                            <input type="password" id="au_adminPassword" name="CurrentAdminPassword"
+                                   class="form-control" placeholder="Enter your password">
+                            <div class="invalid-feedback">Admin password is required</div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary waves-effect"
+                        data-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" id="saveUserBtn"
+                        class="btn btn-primary waves-effect waves-light">
+                    <i class="fa fa-save mr-1"></i> Save User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section formjQuery {
+    <script>
+
+    var currentFilter = '@(UserStatusType.AllUsers)';
+    var saveUserBtnOriginal = '';
+
+    $(document).ready(function () {
+        GetUsers('@(UserStatusType.AllUsers)');
+        saveUserBtnOriginal = $('#saveUserBtn').html();
+    });
+
+    function openAddUserModal() {
+        document.getElementById('addUserForm').reset();
+        $('#addUserForm').find('.is-invalid').removeClass('is-invalid');
+        $('#addUserModal').modal('show');
+    }
+
+    // Role change — admin password field toggle
+    $('#au_role').on('change', function () {
+        var selectedVal = $(this).val();
+        var adminVal    = '@((int)UserRoles.Admin)';
+
+        if (selectedVal === adminVal) {
+            $('#adminPasswordWrapper').show();
+            $('#au_adminPassword').attr('required', true);
+        } else {
+            $('#adminPasswordWrapper').hide();
+            $('#au_adminPassword').removeAttr('required').val('').removeClass('is-invalid');
+        }
+    });
+
+    $('#saveUserBtn').on('click', function () {
+        var isValid = true;
+
+        $('#addUserForm').find('[required]').each(function () {
+            var el = $(this);
+            if (el.is('select')) {
+                if (!el.val()) {
+                    el.addClass('is-invalid');
+                    isValid = false;
+                }
+            } else {
+                if (!el.val().trim()) {
+                    el.addClass('is-invalid');
+                    isValid = false;
+                }
+            }
+        });
+
+        var emailVal = $('#au_email').val();
+        var atIndex  = emailVal.indexOf(String.fromCharCode(64));
+        var dotIndex = emailVal.lastIndexOf('.');
+        if (emailVal && (atIndex < 1 || dotIndex < atIndex + 2 || dotIndex >= emailVal.length - 1)) {
+            $('#au_email').addClass('is-invalid');
+            isValid = false;
+        }
+
+        if (!isValid) return;
+
+        $('#saveUserBtn').html('<i class="fa fa-spinner fa-spin mr-1"></i> Saving...').prop('disabled', true);
+
+        var frmData = new FormData(document.getElementById('addUserForm'));
+
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("SaveUserByAdmin", "UserManager", new { area = "Admin" })',
+            data: frmData,
+            processData: false,
+            contentType: false,
+            success: function (result) {
+                $('#saveUserBtn').html(saveUserBtnOriginal).prop('disabled', false);
+
+                if (result == @((int)OperationResponse.Success)) {
+                    $('#addUserModal').modal('hide');
+                    swal('Success', 'User has been added successfully.', 'success');
+                    GetUsers(currentFilter);
+
+                } else if (result == @((int)OperationResponse.DuplicateRecord)) {
+                    $('#au_email').addClass('is-invalid');
+                    $('#au_email').next('.invalid-feedback').text('This email is already registered');
+
+                } else if (result == @((int)OperationResponse.AdminPasswordIncorect)) {
+                    $('#au_adminPassword').addClass('is-invalid');
+                    $('#au_adminPassword').next('.invalid-feedback').text('Admin password is incorrect');
+
+                } else if (result == @((int)OperationResponse.ModelStateFail)) {
+                    swal('Error', 'Please fill all required fields.', 'error');
+
+                } else {
+                    swal('Error', 'Something went wrong. Please try again.', 'error');
+                }
+            },
+            error: function () {
+                $('#saveUserBtn').html(saveUserBtnOriginal).prop('disabled', false);
+                swal('Error', 'Server error. Please try again later.', 'error');
+            }
+        });
+    });
+
+    $('#addUserForm').on('input change', 'input, select', function () {
+        $(this).removeClass('is-invalid');
+        $(this).next('.invalid-feedback').text('');
+    });
+
+    function Delete(UserId) {
+        swal({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'No, cancel!',
+            confirmButtonClass: 'btn btn-success',
+            cancelButtonClass: 'btn btn-danger m-l-10',
+            buttonsStyling: false
+        }).then(function () {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("DeleteUser", "UserManager", new { area = "Admin" })',
+                data: { userId: UserId },
+                success: function (result) {
+                    if (result == @((int)OperationResponse.Success)) {
+                        swal('Deleted!', 'User has been deleted.', 'success');
+                        GetUsers(currentFilter);
+                    } else {
+                        swal('Error', 'Server side error.', 'error');
+                    }
+                },
+                error: function () {
+                    swal('Error', 'An error occurred when deleting user.', 'error');
+                }
+            });
+        }, function (dismiss) {
+            if (dismiss === 'cancel') {
+                swal('Cancelled', 'Action has been cancelled.', 'error');
+            }
+        });
+    }
+
+    function UpdateUserStatus(userId, Status) {
+        swal({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Update it!',
+            cancelButtonText: 'No, cancel!',
+            confirmButtonClass: 'btn btn-success',
+            cancelButtonClass: 'btn btn-danger m-l-10',
+            buttonsStyling: false
+        }).then(function () {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("UpdateUserStatus", "UserManager", new { area = "Admin" })',
+                data: { UserId: userId, UserStatus: Status },
+                success: function (response) {
+                    if (response == 1) {
+                        swal('Updated!', 'Status has been updated.', 'success');
+                        GetUsers(currentFilter);
+                    } else {
+                        swal('Error', 'Server side error.', 'error');
+                    }
+                },
+                error: function () {
+                    swal('Error', 'Error updating status.', 'error');
+                }
+            });
+        }, function (dismiss) {
+            if (dismiss === 'cancel') {
+                swal('Cancelled', 'Action has been cancelled.', 'error');
+                GetUsers(currentFilter);
+            }
+        });
+    }
+
+    function UpdateUserRole(Userid, UserRole) {
+        swal({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, update it!',
+            cancelButtonText: 'No, cancel!',
+            confirmButtonClass: 'btn btn-success',
+            cancelButtonClass: 'btn btn-danger m-l-10',
+            buttonsStyling: false
+        }).then(function () {
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/UserManager/UpdateUserRole',
+                data: { userId: Userid, role: UserRole },
+                success: function (response) {
+                    if (response == @((int)OperationResponse.Success)) {
+                        swal('Updated!', 'Role has been updated.', 'success');
+                        GetUsers(currentFilter);
+                    } else {
+                        swal('Error', 'Server side error.', 'error');
+                    }
+                },
+                error: function () {
+                    swal('Error', 'Error updating role.', 'error');
+                }
+            });
+        }, function (dismiss) {
+            if (dismiss === 'cancel') {
+                swal('Cancelled', 'Action has been cancelled.', 'error');
+                GetUsers(currentFilter);
+            }
+        });
+    }
+
+        function GetUsers(UserStatusType) {
+
+            showTableLoader('TableContainer', 'Loading users...');
+
+            $.ajax({
+                type: 'POST',
+                url: '/Admin/UserManager/GetUsersByUsingPartial',
+                data: { statusType: UserStatusType },
+                success: function (result) {
+                    if ($.fn.DataTable.isDataTable('#usersTable')) {
+                        $('#usersTable').DataTable().destroy();
+                        $('#usersTable').remove();
+                    }
+                    $('#TableContainer').html(result);
+                    $('#usersTable').DataTable({
+                        responsive: true,
+                        autoWidth: false,
+                        scrollX: false
+                    });
+                },
+                error: function (xhr) {
+                    $('#TableContainer').html(
+                        '<div class="table-loader">' +
+                        '<i class="fa fa-exclamation-circle" style="font-size:32px;color:#e81c1c;"></i>' +
+                        '<p style="color:#e81c1c;">Error loading data. Please try again.</p>' +
+                        '</div>'
+                    );
+                }
+            });
+        }
+
+    function setFilter(name, value) {
+        document.getElementById('filterButton').innerText = name;
+        document.getElementById('TableName').innerText    = name;
+        currentFilter = value;
+        GetUsers(value);
+    }
+
+    </script>
+}

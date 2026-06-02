@@ -1,0 +1,138 @@
+﻿@using OCMS.Common.CommonClasses.Enums
+
+@model OCMS.DTO_s.UsersDto_s.LoginDTO
+@{
+    ViewBag.Title = "Login";
+    Layout = "~/Areas/Users/Views/_Layout.cshtml";
+}
+
+<section class="login-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="login-card">
+                    <div class="login-header">
+                        <h2>Welcome Back</h2>
+                        <p>Please login to your account</p>
+                    </div>
+
+                    <form id="loginForm" class="login-form" novalidate>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="Email" required placeholder="Enter your email">
+                            <div class="invalid-feedback">Please enter a valid email</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" name="Password" id="password" required placeholder="Enter your password">
+                            <div class="invalid-feedback">Please enter your password</div>
+                        </div>
+
+                        <div class="form-options">
+                            <label class="remember-me">
+                                <input type="checkbox" id="rememberMe"> Remember me
+                                <small class="text-muted ms-1" style="font-size:11px;">(30 days)</small>
+                            </label>
+                            <a href="/Users/Auth/VerifyEmailPage">Forgot password?</a>
+                        </div>
+
+                        <button type="submit" id="loginBtn" class="login-btn">Login</button>
+
+                        <div class="login-footer">
+                            Don't have an account? <a href="/Users/Auth/RegistrationPage">Create one</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section scripts{
+    <script src="~/Asset/UserAsset/js/jquery.min.js"></script>
+    <script>
+
+        var loginBtn = $('#loginBtn');
+        var originalBtnHtml = loginBtn.html();
+
+        function setBtnLoading() {
+            loginBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Please wait...').prop('disabled', true);
+        }
+
+        function resetBtn() {
+            loginBtn.html(originalBtnHtml).prop('disabled', false);
+        }
+
+        $('#loginForm').on('input', 'input', function () {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').text('');
+        });
+
+        $('#loginForm').on('submit', function (e) {
+            e.preventDefault();
+
+            if (!validateForm()) {
+                showToast("Please fill all required fields.", "error");
+                return;
+            }
+
+            setBtnLoading();
+
+            var frmData = new FormData(document.getElementById("loginForm"));
+            frmData.append("RememberMe", $('#rememberMe').is(':checked') ? "true" : "false");
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("LoginCheck", "Auth", new { area = "Users" })',
+                data: frmData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    resetBtn();
+
+                    if (response.RedirectUrl) {
+                        window.location.href = response.RedirectUrl;
+                        return;
+                    }
+
+                    if (response == @((int)OperationResponse.Success)) {
+                        showToast("Login successful! Redirecting...", "success");
+                        setTimeout(() => window.location.href = "/Visitors/Home/Index", 1500);
+                    } else {
+                        showToast("Invalid credentials, please try again.", "error");
+                    }
+                },
+                error: function (xhr) {
+                    resetBtn();
+                    showToast("Something went wrong. Please try again later.", "error");
+                }
+            });
+        });
+
+      function validateForm() {
+    var isValid = true;
+
+    $('#loginForm').find('[required]').each(function () {
+        var el = $(this);
+        if (!el.val() || el.val().trim() === '') {
+            el.addClass('is-invalid');
+            isValid = false;
+        }
+    });
+
+    var emailVal = $('#email').val();
+    var atIndex = emailVal.indexOf(String.fromCharCode(64));
+    var dotIndex = emailVal.lastIndexOf('.');
+    var emailEl = $('#email');
+
+    if (emailVal && (atIndex < 1 || dotIndex < atIndex + 2 || dotIndex >= emailVal.length - 1)) {
+        emailEl.addClass('is-invalid');
+        emailEl.next('.invalid-feedback').text('Please enter a valid email address');
+        isValid = false;
+    }
+
+    return isValid;
+}
+
+    </script>
+}

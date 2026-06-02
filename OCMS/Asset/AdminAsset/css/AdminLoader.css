@@ -1,0 +1,122 @@
+﻿/* ── Global Table Loader ── */
+.table-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 14px;
+}
+
+.table-loader .spinner {
+    width: 42px;
+    height: 42px;
+    border: 4px solid #e0e0e0;
+    border-top-color: #1b82ec;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+}
+
+.table-loader p {
+    margin: 0;
+    font-size: 14px;
+    color: #888;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* full page loader */
+#adminPageLoader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(244, 246, 250, 0.97);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    transition: opacity 0.3s ease;
+}
+
+#adminPageLoader.d-none {
+    display: none !important;
+}
+
+#adminPageLoader.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.adm-loader-mark {
+    width: 54px;
+    height: 54px;
+    background: #1b82ec;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    font-family: sans-serif;
+}
+
+.adm-loader-ring {
+    width: 48px;
+    height: 48px;
+    border: 3px solid #d0e4f7;
+    border-top-color: #1b82ec;
+    border-radius: 50%;
+    animation: adminRingSpin 0.8s linear infinite;
+}
+
+@keyframes adminRingSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.adm-loader-text strong {
+    display: block;
+    font-size: 15px;
+    color: #1b2a4a;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.adm-loader-text span {
+    font-size: 13px;
+    color: #7a96b0;
+}
+
+.adm-loader-bar {
+    width: 160px;
+    height: 3px;
+    background: #d0e4f7;
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.adm-loader-bar-fill {
+    height: 100%;
+    width: 40%;
+    background: #1b82ec;
+    border-radius: 99px;
+    animation: adminBarSlide 1.4s ease-in-out infinite;
+}
+
+@keyframes adminBarSlide {
+    0% {
+        transform: translateX(-150%);
+    }
+
+    100% {
+        transform: translateX(450%);
+    }
+}

@@ -1,0 +1,250 @@
+﻿@model OCMS.DTO_s.AdminDashBoard.DashboardDTO
+@{
+    ViewBag.Title = "Dashboard";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-page">
+    <div class="content">
+        <div class="container-fluid">
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="page-title-box">
+                        <h4 class="page-title">Dashboard</h4>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item active">
+                                Welcome, @User.Identity.Name — @DateTime.Now.ToString("dd MMM yyyy")
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-content-wrapper">
+
+                <!-- Stats Cards Row 1 — Users -->
+                <div class="row">
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card bg-primary mini-stat position-relative">
+                            <div class="card-body">
+                                <div class="mini-stat-desc">
+                                    <h6 class="text-uppercase verti-label text-white-50">Users</h6>
+                                    <div class="text-white">
+                                        <h6 class="text-uppercase mt-0 text-white-50">Total Users</h6>
+                                        <h3 class="mb-3 mt-0">@Model.TotalUsers</h3>
+                                        <div>
+                                            <span class="badge badge-light text-success">@Model.TotalApprovedUsers Approved</span>
+                                            <span class="ml-1 badge badge-light text-warning">@Model.TotalPendingUsers Pending</span>
+                                        </div>
+                                    </div>
+                                    <div class="mini-stat-icon">
+                                        <i class="mdi mdi-account-multiple display-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card bg-info mini-stat position-relative">
+                            <div class="card-body">
+                                <div class="mini-stat-desc">
+                                    <h6 class="text-uppercase verti-label text-white-50">Complaints</h6>
+                                    <div class="text-white">
+                                        <h6 class="text-uppercase mt-0 text-white-50">Total Complaints</h6>
+                                        <h3 class="mb-3 mt-0">@Model.TotalComplaints</h3>
+                                        <div>
+                                            <span class="badge badge-light text-info">All Time</span>
+                                        </div>
+                                    </div>
+                                    <div class="mini-stat-icon">
+                                        <i class="mdi mdi-file-document-box display-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card bg-warning mini-stat position-relative">
+                            <div class="card-body">
+                                <div class="mini-stat-desc">
+                                    <h6 class="text-uppercase verti-label text-white-50">Pending</h6>
+                                    <div class="text-white">
+                                        <h6 class="text-uppercase mt-0 text-white-50">Pending Complaints</h6>
+                                        <h3 class="mb-3 mt-0">@Model.PendingComplaints</h3>
+                                        <div>
+                                            <span class="badge badge-light text-warning">Awaiting Action</span>
+                                        </div>
+                                    </div>
+                                    <div class="mini-stat-icon">
+                                        <i class="mdi mdi-clock display-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card bg-success mini-stat position-relative">
+                            <div class="card-body">
+                                <div class="mini-stat-desc">
+                                    <h6 class="text-uppercase verti-label text-white-50">Resolved</h6>
+                                    <div class="text-white">
+                                        <h6 class="text-uppercase mt-0 text-white-50">Resolved Complaints</h6>
+                                        <h3 class="mb-3 mt-0">@Model.ResolvedComplaints</h3>
+                                        <div>
+                                            <span class="badge badge-light text-success">Completed</span>
+                                        </div>
+                                    </div>
+                                    <div class="mini-stat-icon">
+                                        <i class="mdi mdi-check-circle display-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Cards Row 2 -->
+                <div class="row">
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card bg-danger mini-stat position-relative">
+                            <div class="card-body">
+                                <div class="mini-stat-desc">
+                                    <h6 class="text-uppercase verti-label text-white-50">Rejected</h6>
+                                    <div class="text-white">
+                                        <h6 class="text-uppercase mt-0 text-white-50">Rejected Complaints</h6>
+                                        <h3 class="mb-3 mt-0">@Model.RejectedComplaints</h3>
+                                        <div>
+                                            <span class="badge badge-light text-danger">Closed</span>
+                                        </div>
+                                    </div>
+                                    <div class="mini-stat-icon">
+                                        <i class="mdi mdi-close-circle display-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <div class="card bg-primary mini-stat position-relative">
+                            <div class="card-body">
+                                <div class="mini-stat-desc">
+                                    <h6 class="text-uppercase verti-label text-white-50">In Progress</h6>
+                                    <div class="text-white">
+                                        <h6 class="text-uppercase mt-0 text-white-50">In Progress</h6>
+                                        <h3 class="mb-3 mt-0">@Model.InProgressComplaints</h3>
+                                        <div>
+                                            <span class="badge badge-light text-primary">Being Handled</span>
+                                        </div>
+                                    </div>
+                                    <div class="mini-stat-icon">
+                                        <i class="mdi mdi-progress-clock display-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Complaint Status Breakdown + Quick Links -->
+                <div class="row">
+                    <div class="col-xl-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="mt-0 header-title mb-4">Complaint Status Breakdown</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Status</th>
+                                                <th>Count</th>
+                                                <th>Progress</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><span class="badge badge-warning">Pending</span></td>
+                                                <td>@Model.PendingComplaints</td>
+                                                <td>
+                                                    <div class="progress" style="height:6px;">
+                                                        <div class="progress-bar bg-warning" style="width:@(Model.TotalComplaints > 0 ? (Model.PendingComplaints * 100 / Model.TotalComplaints) : 0)%"></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="badge badge-primary">In Progress</span></td>
+                                                <td>@Model.InProgressComplaints</td>
+                                                <td>
+                                                    <div class="progress" style="height:6px;">
+                                                        <div class="progress-bar bg-primary" style="width:@(Model.TotalComplaints > 0 ? (Model.InProgressComplaints * 100 / Model.TotalComplaints) : 0)%"></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="badge badge-success">Resolved</span></td>
+                                                <td>@Model.ResolvedComplaints</td>
+                                                <td>
+                                                    <div class="progress" style="height:6px;">
+                                                        <div class="progress-bar bg-success" style="width:@(Model.TotalComplaints > 0 ? (Model.ResolvedComplaints * 100 / Model.TotalComplaints) : 0)%"></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="badge badge-danger">Rejected</span></td>
+                                                <td>@Model.RejectedComplaints</td>
+                                                <td>
+                                                    <div class="progress" style="height:6px;">
+                                                        <div class="progress-bar bg-danger" style="width:@(Model.TotalComplaints > 0 ? (Model.RejectedComplaints * 100 / Model.TotalComplaints) : 0)%"></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="mt-0 header-title mb-4">Quick Actions</h4>
+                                <div class="d-grid" style="display:flex; flex-direction:column; gap:10px;">
+                                    <a href="/Admin/UserManager/GetAllUser"
+                                       class="btn btn-primary waves-effect waves-light text-left">
+                                        <i class="mdi mdi-account-multiple mr-2"></i>
+                                        Manage Users
+                                        <span class="badge badge-light text-primary float-right mt-1">@Model.TotalUsers</span>
+                                    </a>
+                                    <a href="/Admin/ComplaintManager/ComplaintsPage"
+                                       class="btn btn-info waves-effect waves-light text-left">
+                                        <i class="mdi mdi-file-document-box mr-2"></i>
+                                        Manage Complaints
+                                        <span class="badge badge-light text-info float-right mt-1">@Model.TotalComplaints</span>
+                                    </a>
+                                    <a href="/Admin/UserManager/GetAllUser"
+                                       class="btn btn-warning waves-effect waves-light text-left">
+                                        <i class="mdi mdi-clock mr-2"></i>
+                                        Pending Users
+                                        <span class="badge badge-light text-warning float-right mt-1">@Model.TotalPendingUsers</span>
+                                    </a>
+                                    <a href="/Admin/ComplaintManager/ComplaintsPage"
+                                       class="btn btn-warning waves-effect waves-light text-left">
+                                        <i class="mdi mdi-alert mr-2"></i>
+                                        Pending Complaints
+                                        <span class="badge badge-light text-warning float-right mt-1">@Model.PendingComplaints</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

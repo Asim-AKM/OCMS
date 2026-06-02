@@ -1,0 +1,107 @@
+﻿@using OCMS.Common.CommonClasses.Enums
+@{
+    ViewBag.Title = "Verify Email";
+    Layout = "~/Areas/Users/Views/_Layout.cshtml";
+}
+
+<section class="login-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="login-card">
+                    <div class="login-header">
+                        <h2>Forgot Password</h2>
+                        <p>Enter your email to receive an OTP</p>
+                    </div>
+
+                    <form id="verifyEmailForm" novalidate>
+                        <div class="form-group">
+                            <label for="verifyEmail">Email Address</label>
+                            <input type="email" id="verifyEmail" name="Email"
+                                   required placeholder="Enter your email">
+                            <div class="invalid-feedback">Please enter a valid email</div>
+                        </div>
+
+                        <button type="submit" id="verifyBtn" class="login-btn">
+                            Send OTP
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section scripts {
+    <script src="~/Asset/UserAsset/js/jquery.min.js"></script>
+    <script>
+
+        var verifyBtn = $('#verifyBtn');
+        var verifyBtnOriginal = verifyBtn.html();
+
+        function setBtnLoading() {
+            verifyBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Sending...').prop('disabled', true);
+        }
+
+        function resetBtn() {
+            verifyBtn.html(verifyBtnOriginal).prop('disabled', false);
+        }
+
+        $('#verifyEmail').on('input', function () {
+            $(this).removeClass('is-invalid');
+        });
+
+        function validateForm() {
+            var isValid = true;
+            var emailVal = $('#verifyEmail').val().trim();
+
+            if (!emailVal) {
+                $('#verifyEmail').addClass('is-invalid');
+                return false;
+            }
+
+            var atIndex = emailVal.indexOf(String.fromCharCode(64));
+            var dotIndex = emailVal.lastIndexOf('.');
+            if (atIndex < 1 || dotIndex < atIndex + 2 || dotIndex >= emailVal.length - 1) {
+                $('#verifyEmail').addClass('is-invalid');
+                $('#verifyEmail').next('.invalid-feedback').text('Please enter a valid email address');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        $('#verifyEmailForm').on('submit', function (e) {
+            e.preventDefault();
+
+            if (!validateForm()) {
+                showToast("Please enter a valid email.", "error");
+                return;
+            }
+
+            setBtnLoading();
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("EmailVerification", "Auth", new { area = "Users" })',
+                data: $(this).serialize(),
+                success: function (result) {
+                    resetBtn();
+                    if (result === @((int)OperationResponse.Success)) {
+                        showToast("OTP sent! Redirecting...", "success");
+                        setTimeout(function () {
+                            window.location.href = "/Users/Auth/UpdatePasswordPage";
+                        }, 1500);
+                    } else {
+                        showToast("Email not found. Please try again.", "error");
+                    }
+                },
+                error: function () {
+                    resetBtn();
+                    showToast("Something went wrong. Please try again later.", "error");
+                }
+            });
+        });
+
+    </script>
+}

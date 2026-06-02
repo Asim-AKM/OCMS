@@ -1,0 +1,48 @@
+﻿body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.status-card {
+    border-left: 5px solid;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .status-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+
+.status-pending {
+    border-color: #f0ad4e; /* Bootstrap warning color */
+}
+
+.status-suspended {
+    border-color: #dc3545; /* Bootstrap danger color */
+}
+
+.status-rejected {
+    border-color: #6c757d; /* Bootstrap secondary color */
+}
+
+.pulse-dot {
+    height: 12px;
+    width: 12px;
+    background-color: currentColor;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s infinite;
+    margin-right: 6px;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+}

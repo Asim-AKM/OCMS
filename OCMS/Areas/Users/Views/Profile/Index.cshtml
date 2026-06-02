@@ -1,0 +1,323 @@
+﻿@using OCMS.Common.CommonClasses.Enums
+@model OCMS.DTO_s.UserProfileDto_s.UserProfileDTO
+@{
+    ViewBag.Title = "My Profile";
+    Layout = "~/Areas/Users/Views/_Layout.cshtml";
+}
+
+<section class="prf-section py-5">
+    <div class="container">
+        <div class="row g-4">
+
+            <!-- Left Card -->
+            <div class="col-lg-4">
+                <div class="prf-left-card">
+                    <div class="prf-avatar-wrap">
+                        <img id="profileImagePreview"
+                             src="@(string.IsNullOrEmpty(Model.ImageLink) ? "/Asset/UserAsset/images/default-avatar.png" : Model.ImageLink)"
+                             alt="Profile Image" class="prf-avatar" />
+                        <label for="imageUpload" class="prf-avatar-edit" title="Change Photo">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                    </div>
+                    <h4 class="prf-name" id="profileNameDisplay">@Model.FullName</h4>
+                    <p class="prf-email">@Model.Email</p>
+                    <span class="badge @(Model.Status == UserStatus.Approved ? "bg-success" : Model.Status == UserStatus.Pending ? "bg-warning" : "bg-danger")">
+                        @Model.Status
+                    </span>
+                    <hr />
+                    <div class="prf-meta">
+                        <div class="prf-meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Joined</span>
+                            <strong>@(Model.CreadDate.HasValue ? Model.CreadDate.Value.ToString("MMM yyyy") : "N/A")</strong>
+                        </div>
+                        <div class="prf-meta-item">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Complaints</span>
+                            <strong id="totalComplaintsCount">--</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Tabs -->
+            <div class="col-lg-8">
+                <div class="prf-tabs-card">
+                    <ul class="prf-nav" id="profileTabs">
+                        <li class="prf-nav-item">
+                            <a class="prf-nav-link active" href="#" data-tab="prf-basic">
+                                <i class="fas fa-user"></i> Basic Info
+                            </a>
+                        </li>
+                        <li class="prf-nav-item">
+                            <a class="prf-nav-link" href="#" data-tab="prf-complaints">
+                                <i class="fas fa-file-alt"></i> Complaints
+                            </a>
+                        </li>
+                        <li class="prf-nav-item">
+                            <a class="prf-nav-link" href="#" data-tab="prf-password">
+                                <i class="fas fa-lock"></i> Change Password
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Basic Info Panel -->
+                    <div class="prf-panel" id="prf-basic">
+                        <form id="profileForm" enctype="multipart/form-data" novalidate>
+                            <input type="file" id="imageUpload" name="ImageFile" accept="image/*" style="display:none;">
+                            <div class="mb-3">
+                                <label>Full Name</label>
+                                <input type="text" id="fullName" name="FullName" class="form-control"
+                                       value="@Model.FullName" required placeholder="Enter your full name">
+                                <div class="invalid-feedback">Full name is required</div>
+                            </div>
+                            <div class="mb-3">
+                                <label>Email Address</label>
+                                <input type="email" class="form-control" value="@Model.Email" disabled>
+                                <small class="text-muted" style="font-size:12px;">Email cannot be changed</small>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" id="updateProfileBtn" class="btn btn-primary px-4">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Complaints Panel -->
+                    <div class="prf-panel d-none" id="prf-complaints">
+                        <div id="complaintsLoader" class="text-center py-4">
+                            <div class="spinner-border" style="color:#741f9e;" role="status"></div>
+                        </div>
+                        <div id="complaintsContainer"></div>
+                    </div>
+
+                    <!-- Password Panel -->
+                    <div class="prf-panel d-none" id="prf-password">
+                        <form id="passwordForm" novalidate>
+                            <div class="mb-3">
+                                <label>Current Password</label>
+                                <input type="password" id="currentPassword" name="CurrentPassword"
+                                       class="form-control" required placeholder="Enter current password">
+                                <div class="invalid-feedback">Current password is required</div>
+                            </div>
+                            <div class="mb-3">
+                                <label>New Password</label>
+                                <input type="password" id="newPassword" name="NewPassword"
+                                       class="form-control" required placeholder="Enter new password">
+                                <div class="invalid-feedback">New password is required</div>
+                            </div>
+                            <div class="mb-3">
+                                <label>Confirm New Password</label>
+                                <input type="password" id="confirmNewPassword" name="ConfirmPassword"
+                                       class="form-control" required placeholder="Confirm new password">
+                                <div class="invalid-feedback">Passwords must match</div>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" id="changePasswordBtn" class="btn btn-primary px-4">
+                                    Update Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section scripts{
+    <script src="~/Asset/UserAsset/js/jquery.min.js"></script>
+    <script>
+
+        var complaintsLoaded = false;
+
+        $('.prf-nav-link').on('click', function (e) {
+            e.preventDefault();
+            var target = $(this).data('tab');
+
+            $('.prf-nav-link').removeClass('active');
+            $(this).addClass('active');
+
+            $('.prf-panel').addClass('d-none');
+            $('#' + target).removeClass('d-none');
+
+            if (target === 'prf-complaints' && !complaintsLoaded) {
+                loadComplaints();
+            }
+        });
+
+        $('#imageUpload').on('change', function () {
+            var file = this.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('#profileImagePreview').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        var updateBtn = $('#updateProfileBtn');
+        var updateBtnOriginal = updateBtn.html();
+
+        $('#fullName').on('input', function () {
+            $(this).removeClass('is-invalid');
+        });
+
+        $('#profileForm').on('submit', function (e) {
+            e.preventDefault();
+
+            if (!$('#fullName').val().trim()) {
+                $('#fullName').addClass('is-invalid');
+                return;
+            }
+
+            updateBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Saving...').prop('disabled', true);
+
+            var frmData = new FormData(document.getElementById('profileForm'));
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("UpdateProfile", "Profile", new { area = "Users" })',
+                data: frmData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    updateBtn.html(updateBtnOriginal).prop('disabled', false);
+                    if (response.Success) {
+                        $('#profileNameDisplay').text($('#fullName').val());
+                        showToast("Profile updated successfully.", "success");
+                    } else {
+                        showToast(response.Message || "Failed to update profile.", "error");
+                    }
+                },
+                error: function () {
+                    updateBtn.html(updateBtnOriginal).prop('disabled', false);
+                    showToast("Server error. Please try again.", "error");
+                }
+            });
+        });
+
+        var pwdBtn = $('#changePasswordBtn');
+        var pwdBtnOriginal = pwdBtn.html();
+
+        $('#passwordForm').on('input', 'input', function () {
+            $(this).removeClass('is-invalid');
+        });
+
+        $('#passwordForm').on('submit', function (e) {
+            e.preventDefault();
+
+            var isValid = true;
+
+            $('#passwordForm').find('[required]').each(function () {
+                if (!$(this).val().trim()) {
+                    $(this).addClass('is-invalid');
+                    isValid = false;
+                }
+            });
+
+            if ($('#newPassword').val() !== $('#confirmNewPassword').val()) {
+                $('#confirmNewPassword').addClass('is-invalid');
+                $('#confirmNewPassword').next('.invalid-feedback').text('Passwords must match');
+                isValid = false;
+            }
+
+            if (!isValid) {
+                showToast("Please fix the errors below.", "error");
+                return;
+            }
+
+            pwdBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Updating...').prop('disabled', true);
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("ChangePassword", "Profile", new { area = "Users" })',
+                data: {
+                    CurrentPassword: $('#currentPassword').val(),
+                    NewPassword:     $('#newPassword').val(),
+                    ConfirmPassword: $('#confirmNewPassword').val()
+                },
+                success: function (response) {
+                    pwdBtn.html(pwdBtnOriginal).prop('disabled', false);
+                    if (response.Success) {
+                        $('#passwordForm')[0].reset();
+                        showToast("Password changed successfully.", "success");
+                    } else {
+                        showToast(response.Message || "Current password is incorrect.", "error");
+                    }
+                },
+                error: function () {
+                    pwdBtn.html(pwdBtnOriginal).prop('disabled', false);
+                    showToast("Server error. Please try again.", "error");
+                }
+            });
+        });
+
+        function loadComplaints() {
+            $.ajax({
+                type: 'GET',
+                url: '@Url.Action("GetComplaints", "Profile", new { area = "Users" })',
+                success: function (data) {
+                    complaintsLoaded = true;
+                    $('#complaintsLoader').hide();
+
+                    if (!data || data.length === 0) {
+                        $('#complaintsContainer').html(
+                            '<div class="prf-empty-state">' +
+                            '<i class="fas fa-folder-open"></i>' +
+                            '<p>No complaints registered yet.</p>' +
+                            '</div>'
+                        );
+                        $('#totalComplaintsCount').text(0);
+                        return;
+                    }
+
+                    $('#totalComplaintsCount').text(data.length);
+
+                    var statusMap = {
+                        0: { label: 'Approved',    cls: 'bg-info'    },
+                        1: { label: 'Pending',     cls: 'bg-warning' },
+                        2: { label: 'In Progress', cls: 'bg-primary' },
+                        3: { label: 'Resolved',    cls: 'bg-success' },
+                        4: { label: 'Rejected',    cls: 'bg-danger'  }
+                    };
+
+                    var html = '';
+                    $.each(data, function (i, c) {
+                        var s = statusMap[c.Status] || { label: 'Unknown', cls: 'bg-secondary' };
+                        var date = c.SubmissionDate
+                            ? new Date(parseInt(c.SubmissionDate.replace('/Date(', '').replace(')/', ''))).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                            : 'N/A';
+
+                        html +=
+                            '<div class="prf-complaint-item">' +
+                                '<div class="prf-ci-header">' +
+                                    '<div>' +
+                                        '<span class="prf-track-badge">C-' + (c.TrackId || 'N/A') + '</span>' +
+                                        '<h6>' + c.Title + '</h6>' +
+                                    '</div>' +
+                                    '<span class="badge ' + s.cls + '">' + s.label + '</span>' +
+                                '</div>' +
+                                '<div class="prf-ci-body">' +
+                                    '<span><i class="fas fa-tag me-1"></i>' + (c.Category || 'N/A') + '</span>' +
+                                    '<span><i class="fas fa-calendar me-1"></i>' + date + '</span>' +
+                                '</div>' +
+                            '</div>';
+                    });
+
+                    $('#complaintsContainer').html(html);
+                },
+                error: function () {
+                    $('#complaintsLoader').hide();
+                    $('#complaintsContainer').html(
+                        '<div class="alert alert-danger">Failed to load complaints.</div>'
+                    );
+                }
+            });
+        }
+
+    </script>
+}

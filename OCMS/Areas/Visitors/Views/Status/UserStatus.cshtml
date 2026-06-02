@@ -1,0 +1,61 @@
+﻿@using OCMS.Common.CommonClasses.Enums
+@model OCMS.DTO_s.ComplaintDto_s.UserStatusPageDto
+
+@{
+    var status = Model.Status;
+    string title = "";
+    string description = "";
+    string iconClass = "";
+
+    switch ((UserStatus)status)
+    {
+        case UserStatus.Pending:
+            title = "Account Pending";
+            description = "Your account is currently under review. We’ll notify you once it’s approved.";
+            iconClass = "fas fa-hourglass-half text-warning"; // Font Awesome
+            break;
+        case UserStatus.Suspended:
+            title = "Account Suspended";
+            description = "Your account has been temporarily suspended due to policy violations. Please contact support for assistance.";
+            iconClass = "fas fa-ban text-danger";
+            break;
+        case UserStatus.Rejected:
+            title = "Account Rejected";
+            description = "Unfortunately, your account application has been rejected. You may reapply or contact support for more details.";
+            iconClass = "fas fa-exclamation-circle text-secondary";
+            break;
+        default:
+            title = "Unknown Status";
+            description = "Please refresh or contact support.";
+            iconClass = "fas fa-question-circle text-muted";
+            break;
+    }
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Status</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-light">
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <div class="card shadow-lg text-center p-4" style="max-width: 500px; border-radius: 1rem;">
+            <div class="mb-3">
+                <i class="@iconClass" style="font-size: 3rem;"></i>
+            </div>
+            <h3 class="fw-bold">@title</h3>
+            <p class="text-muted">@description</p>
+            <div class="mt-3">
+                <a href="/Visitors/Home/Index" class="btn btn-primary rounded-pill px-4">Back To Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+
+

@@ -1,0 +1,196 @@
+﻿@using OCMS.Common.CommonClasses.Enums
+
+@model OCMS.Areas.Users.DTO_s.AddUserDTO
+@{
+    ViewBag.Title = "Registration";
+    Layout = "~/Areas/Users/Views/_Layout.cshtml";
+}
+
+<section class="signup-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="signup-card">
+                    <div class="signup-header">
+                        <h2>Create Your Account</h2>
+                        <p>Join our complaint management system today</p>
+                    </div>
+
+                    <form id="signupForm" class="signup-form" novalidate enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="fullName">Full Name</label>
+                            <input type="text" id="fullName" name="FullName" required placeholder="Enter your full name">
+                            <i class="fas fa-user input-icon"></i>
+                            <div class="invalid-feedback">Please enter your full name</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" name="Email" id="email" required placeholder="Enter your email">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <div class="invalid-feedback">Please enter a valid email address</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="password">Password</label>
+                                    <input type="password" name="Password" id="password" required placeholder="Create a password">
+                                    <i class="fas fa-lock input-icon"></i>
+                                    <div class="invalid-feedback">Please enter a password</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="confirmPassword">Confirm Password</label>
+                                    <input type="password" id="confirmPassword" required placeholder="Confirm your password">
+                                    <i class="fas fa-lock input-icon"></i>
+                                    <div class="invalid-feedback">Passwords must match</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="imagefile">Profile Image</label>
+                            <input type="file" id="imagefile" name="ImageFile" accept="image/*">
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                            </label>
+                            <div class="invalid-feedback">You must agree to the terms</div>
+                        </div>
+
+                        <button type="submit" id="signupBtn" class="signup-btn">Create Account</button>
+
+                        <div class="signup-footer mt-3">
+                            Already have an account? <a href="/Users/Auth/Login">Sign in</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section scripts{
+    <script src="~/Asset/UserAsset/js/jquery.min.js"></script>
+    <script>
+
+        var signupBtn = $('#signupBtn');
+        var originalBtnHtml = signupBtn.html();
+
+        function setBtnLoading() {
+            signupBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Creating account...').prop('disabled', true);
+        }
+
+        function resetBtn() {
+            signupBtn.html(originalBtnHtml).prop('disabled', false);
+        }
+
+        $('#signupForm').on('input', 'input', function () {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').text('');
+        });
+
+        $('#signupForm').on('change', '#terms', function () {
+            $(this).removeClass('is-invalid');
+        });
+
+        $('#confirmPassword').on('input', function () {
+            if ($(this).val() !== $('#password').val()) {
+                $(this).addClass('is-invalid');
+                $(this).next('.invalid-feedback').text('Passwords must match');
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        });
+
+     function validateForm() {
+    var isValid = true;
+
+    $('#signupForm').find('[required]').each(function () {
+        var el = $(this);
+
+        if (el.attr('type') === 'checkbox') {
+            if (!el.is(':checked')) {
+                el.addClass('is-invalid');
+                isValid = false;
+            }
+            return;
+        }
+
+        if (!el.val() || el.val().trim() === '') {
+            el.addClass('is-invalid');
+            isValid = false;
+        }
+    });
+
+    var emailVal = $('#email').val();
+    var atIndex = emailVal.indexOf(String.fromCharCode(64));
+    var dotIndex = emailVal.lastIndexOf('.');
+    var emailEl = $('#email');
+
+    if (emailVal && (atIndex < 1 || dotIndex < atIndex + 2 || dotIndex >= emailVal.length - 1)) {
+        emailEl.addClass('is-invalid');
+        emailEl.next('.invalid-feedback').text('Please enter a valid email address');
+        isValid = false;
+    }
+
+    if ($('#confirmPassword').val() !== $('#password').val()) {
+        $('#confirmPassword').addClass('is-invalid');
+        $('#confirmPassword').next('.invalid-feedback').text('Passwords must match');
+        isValid = false;
+    }
+
+    return isValid;
+}
+
+        $('#signupForm').on('submit', function (e) {
+            e.preventDefault();
+
+            if (!validateForm()) {
+                showToast("Please fix the errors below.", "error");
+                return;
+            }
+
+            setBtnLoading();
+
+            var frmData = new FormData(document.getElementById("signupForm"));
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("SaveUsers", "Auth", new { area = "Users" })',
+                data: frmData,
+                processData: false,
+                contentType: false,
+                success: function (result) {
+                    if (result == @((int)OperationResponse.Success)) {
+                        signupBtn.html('<i class="fas fa-check me-2"></i>Account Created!').prop('disabled', true);
+                        showToast("Account created successfully!", "success");
+                        setTimeout(function () {
+                            window.location.replace("/Users/Auth/Login");
+                        }, 1500);
+
+                    } else if (result == @((int)OperationResponse.DuplicateRecord)) {
+                        resetBtn();
+                        $('#email').addClass('is-invalid');
+                        $('#email').next('.invalid-feedback').text('This email is already registered');
+                        showToast("Email already exists, please use a different one.", "error");
+
+                    } else {
+                        resetBtn();
+                        showToast("An unexpected error occurred. Please try again.", "error");
+                    }
+                },
+                error: function () {
+                    resetBtn();
+                    showToast("Server error. Please try again later.", "error");
+                }
+            });
+        });
+
+    </script>
+}

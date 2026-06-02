@@ -1,0 +1,233 @@
+﻿@using OCMS.Common.CommonClasses.Enums
+@{
+    ViewBag.Title = "ComplaintPage";
+    Layout = "~/Areas/Users/Views/_Layout.cshtml";
+}
+
+<section class="complaint-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="complaint-card">
+                    <div class="complaint-header">
+                        <h2><i class="fas fa-exclamation-triangle me-2"></i> Register New Complaint</h2>
+                        <p>Please provide complete details about your issue</p>
+                    </div>
+
+                    <form id="complaintForm" class="complaint-form" novalidate enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="complaintTitle">Complaint Title</label>
+                                    <input type="text" name="Title" id="complaintTitle" required placeholder="Brief description of your complaint">
+                                    <div class="invalid-feedback">Please enter a complaint title</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="complaintCategory">Category</label>
+                                    <select id="complaintCategory" class="form-select" name="Category" required>
+                                        <option value="" selected disabled>Select category</option>
+                                        <option value="electricity">Electricity Issue</option>
+                                        <option value="water">Water Supply</option>
+                                        <option value="sanitation">Sanitation</option>
+                                        <option value="road">Road Maintenance</option>
+                                        <option value="noise">Noise Pollution</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    <div class="invalid-feedback">Please select a category</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="complaintDescription">Detailed Description</label>
+                            <textarea id="complaintDescription" name="Description" rows="5" required
+                                      placeholder="Please describe your complaint in detail including location, time, and any other relevant information"></textarea>
+                            <div class="invalid-feedback">Please provide a detailed description</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="complaintLocation">Location</label>
+                                    <input type="text" name="Location" id="complaintLocation" required placeholder="Street address or landmark">
+                                    <div class="invalid-feedback">Please specify location</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="complaintDate">Date of Incident</label>
+                                    <input type="date" name="SubmissionDate" id="complaintDate" required>
+                                    <div class="invalid-feedback">Please select date</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Upload Evidence (Optional)</label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" name="ImageFile" id="complaintFiles" multiple
+                                       accept="image/*,.pdf,.doc,.docx"
+                                       class="file-upload-input">
+                                <label for="complaintFiles" class="file-upload-label">
+                                    <i class="fas fa-cloud-upload-alt me-2"></i>
+                                    <span>Choose files or drag them here</span>
+                                </label>
+                                <div class="file-preview" id="filePreview"></div>
+                            </div>
+                            <small class="text-muted">Max file size: 5MB (Images, PDF, DOC)</small>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="declaration" required>
+                            <label class="form-check-label" for="declaration">
+                                I declare that the information provided is accurate to the best of my knowledge
+                            </label>
+                            <div class="invalid-feedback">You must accept this declaration</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="reset" class="btn btn-outline-secondary">Clear Form</button>
+                            <button type="submit" id="submitBtn" class="btn btn-primary">Submit Complaint</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="complaintSuccessModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Complaint Registered</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-check-circle text-success mb-3" style="font-size: 3rem;"></i>
+                <h4>Your complaint has been registered!</h4>
+                <p class="mb-0">Complaint ID: <strong id="complaintIdDisplay">C-XXXX</strong></p>
+                <p>Please wait while we process your request.</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Continue</button>
+                <a href="/Visitors/Complaint/TrackComplaintPage" class="btn btn-outline-success">Track Complaint</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script src="~/Asset/UserAsset/js/jquery.min.js"></script>
+    <script>
+
+        var submitBtn = $('#submitBtn');
+        var originalBtnHtml = submitBtn.html();
+
+        function setBtnLoading() {
+            submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Submitting...').prop('disabled', true);
+        }
+
+        function resetBtn() {
+            submitBtn.html(originalBtnHtml).prop('disabled', false);
+        }
+
+        $('#complaintForm').on('submit', function (e) {
+            e.preventDefault();
+            RegisterComplaint();
+        });
+
+        $('#complaintForm').on('input change', 'input, textarea, select', function () {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').text('');
+        });
+
+        $('#declaration').on('change', function () {
+            $(this).removeClass('is-invalid');
+            $(this).closest('.form-check').find('.invalid-feedback').text('');
+        });
+
+        function validateForm() {
+            var isValid = true;
+            var frm = $('#complaintForm');
+
+            frm.find('[required]').each(function () {
+                var el = $(this);
+                var val = el.val();
+
+                if (el.attr('type') === 'checkbox') {
+                    if (!el.is(':checked')) {
+                        el.addClass('is-invalid');
+                        isValid = false;
+                    }
+                    return;
+                }
+
+                if (!val || val.trim() === '') {
+                    el.addClass('is-invalid');
+                    isValid = false;
+                }
+            });
+
+            return isValid;
+        }
+
+        function RegisterComplaint() {
+            if (!validateForm()) {
+                showToast("Please fill all required fields.", "error");
+                return;
+            }
+
+            setBtnLoading();
+
+            var frmData = new FormData(document.getElementById("complaintForm"));
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("RegisterComplaint", "Complaint", new { area = "Visitors" })',
+                data: frmData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    resetBtn();
+
+                    if (!response.Success && response.Errors) {
+                        var frm = document.getElementById("complaintForm");
+                        $(frm).find('.is-invalid').removeClass('is-invalid');
+
+                        for (var key in response.Errors) {
+                            var input = $(frm).find('[name="' + key + '"]');
+                            input.addClass('is-invalid');
+                            input.next('.invalid-feedback').text(response.Errors[key][0]);
+                        }
+
+                        showToast("Please fix the errors below.", "error");
+                        return;
+                    }
+
+                    if (response.RedirectUrl) {
+                        window.location.href = response.RedirectUrl;
+                        return;
+                    }
+
+                    if (response.Success) {
+                      document.getElementById("complaintForm").reset();
+                      $('#filePreview').html('');
+                      $('#complaintIdDisplay').text('C-' + response.TrackId);
+                      var successModal = new bootstrap.Modal(document.getElementById('complaintSuccessModal'));
+                      successModal.show();
+                    } else {
+                        showToast("Something went wrong. Please try again.", "error");
+                    }
+                },
+                error: function (xhr) {
+                    resetBtn();
+                    showToast("Server error. Please try again later.", "error");
+                }
+            });
+        }
+
+    </script>
+}

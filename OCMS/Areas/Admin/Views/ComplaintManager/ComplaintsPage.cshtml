@@ -1,0 +1,241 @@
+﻿@using OCMS.Common.CommonClasses.Enums
+
+@{
+    ViewBag.Title = "ComplaintsPage";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="content-page">
+    <div class="content">
+        <div class="container-fluid">
+
+            <!-- ── Page Title Box — same as Users page ── -->
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="page-title-box">
+                        <h4 id="CompHead" class="page-title">Complaints Table</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Table Card — same as Users page ── -->
+            <div class="page-content-wrapper">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card m-b-20">
+                            <div class="card-body">
+
+                                <!-- Action Bar: heading left, buttons right -->
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h5 class="mt-0 mb-0" id="CardSubHead">All Complaints</h5>
+                                    </div>
+                                    <div class="d-flex align-items-center" style="gap:8px;">
+                                        <div class="btn-group">
+                                            <span class="btn btn-primary disabled"
+                                                  style="pointer-events:none;
+                                                         border-top-right-radius:0;
+                                                         border-bottom-right-radius:0;">
+                                                Filter
+                                            </span>
+                                            <button id="filterButton"
+                                                    type="button"
+                                                    class="btn btn-primary dropdown-toggle"
+                                                    data-toggle="dropdown"
+                                                    aria-haspopup="true"
+                                                    aria-expanded="false"
+                                                    style="border-top-left-radius:0;
+                                                           border-bottom-left-radius:0;">
+                                                All Comp
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="javascript:void(0)"
+                                                   onclick="setFilter('Resolved', '@((int)ComplaintStatusReq.Resolved)')">
+                                                    <i class="fa fa-check-circle text-success mr-2"></i>Resolved
+                                                </a>
+                                                <a class="dropdown-item" href="javascript:void(0)"
+                                                   onclick="setFilter('Pending', '@((int)ComplaintStatusReq.Pending)')">
+                                                    <i class="fa fa-hourglass-half text-primary mr-2"></i>Pending
+                                                </a>
+                                                <a class="dropdown-item" href="javascript:void(0)"
+                                                   onclick="setFilter('Rejected', '@((int)ComplaintStatusReq.Rejected)')">
+                                                    <i class="fa fa-times-circle text-danger mr-2"></i>Rejected
+                                                </a>
+                                                <a class="dropdown-item" href="javascript:void(0)"
+                                                   onclick="setFilter('InProgress', '@((int)ComplaintStatusReq.InProgress)')">
+                                                    <i class="fa fa-clock-o text-warning mr-2"></i>InProgress
+                                                </a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item" href="javascript:void(0)"
+                                                   onclick="setFilter('All Comp', '@((int)ComplaintStatusReq.AllComplaints)')">
+                                                    <i class="fa fa-list mr-2"></i>All
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Table loads here via AJAX -->
+                                <div id="TableContainer" class="table-responsive" style="width:100%;"></div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade"
+     id="complaintDetailsModal"
+     tabindex="-1"
+     role="dialog">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content complaint-modal">
+
+            <div class="modal-header complaint-header">
+                <h5 class="modal-title">
+                    <i class="fa fa-file-text mr-2"></i>
+                    Complaint Details
+                </h5>
+
+                <button type="button"
+                        class="close text-white"
+                        data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body p-4"
+                 id="ComplaintDetailsContainer">
+
+                <div class="text-center py-5">
+                    <i class="fa fa-spinner fa-spin fa-2x text-primary"></i>
+                    <p class="mt-3">Loading Complaint Details...</p>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+@section formjQuery {
+    <script>
+
+        let currentComRequest = @((int)ComplaintStatusReq.AllComplaints);
+
+        $(document).ready(function () {
+            GetComplaints(currentComRequest);
+        });
+
+        function GetComplaints(ComplaintType) {
+            showTableLoader('TableContainer', 'Loading complaints...');
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("GetComplaints", "ComplaintManager", new { area = "Admin" })',
+                data: { statusReq: ComplaintType },
+                success: function (result) {
+                    if ($.fn.DataTable.isDataTable('#complaintsTable')) {
+                        $('#complaintsTable').DataTable().destroy();
+                        $('#complaintsTable').remove();
+                    }
+                    $('#TableContainer').html(result);
+                    $('#complaintsTable').DataTable({
+                        responsive: true,
+                        autoWidth: false,
+                        scrollX: false
+                    });
+                },
+                error: function (xhr) {
+                    $('#TableContainer').html(
+                        '<div class="table-loader">' +
+                        '<i class="fa fa-exclamation-circle" style="font-size:32px;color:#e81c1c;"></i>' +
+                        '<p style="color:#e81c1c;">Error loading data. Please try again.</p>' +
+                        '</div>'
+                    );
+                }
+            });
+        }
+
+        function UpdateCompStatus(CompId, CompStatus) {
+            swal({
+                title: 'Are you sure?',
+                text: "This will update the complaint status.",
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Update it!',
+                cancelButtonText: 'No, cancel!',
+                confirmButtonClass: 'btn btn-success',
+                cancelButtonClass: 'btn btn-danger m-l-10',
+                buttonsStyling: false
+            }).then(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("UpdateCompStatus", "ComplaintManager", new { area = "Admin" })',
+                    data: { ComplaintId: CompId, Status: CompStatus },
+                    success: function (response) {
+                        if (response == '@((int)OperationResponse.Success)') {
+                            swal('Updated!', 'Complaint status has been updated.', 'success');
+                            GetComplaints(currentComRequest);
+                        } else {
+                            swal('Error', 'Server side error. Please try again.', 'error');
+                        }
+                    },
+                    error: function () {
+                        swal('Error', 'Error updating status. Please try again.', 'error');
+                    }
+                });
+            }, function (dismiss) {
+                if (dismiss === 'cancel') {
+                    swal('Cancelled', 'No changes were made.', 'error');
+                }
+            });
+        }
+
+        function setFilter(name, value) {
+            document.getElementById('filterButton').innerText = name;
+
+            var head = document.getElementById('CompHead');
+            if (head) head.innerText = name + ' Table';
+
+            var sub = document.getElementById('CardSubHead');
+            if (sub) sub.innerText = name;
+
+            currentComRequest = value;
+            GetComplaints(currentComRequest);
+        }
+
+
+        function ViewComplaint(complaintId) {
+
+    $('#ComplaintDetailsContainer').html(
+        '<div class="text-center">' +
+        '<i class="fa fa-spinner fa-spin"></i> Loading...' +
+        '</div>'
+    );
+
+    $('#complaintDetailsModal').modal('show');
+
+    $.ajax({
+        url: '@Url.Action("GetComplaintDetails", "ComplaintManager", new { area = "Admin" })',
+        type: 'GET',
+        data: { complaintId: complaintId },
+        success: function (result) {
+            $('#ComplaintDetailsContainer').html(result);
+        },
+        error: function () {
+            $('#ComplaintDetailsContainer').html(
+                '<div class="alert alert-danger">Unable to load complaint details.</div>'
+            );
+        }
+    });
+}
+
+    </script>
+}
